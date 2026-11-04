@@ -1,0 +1,350 @@
+{
+  "project": "Customer Churn Strategy Case: Revenue-at-Risk Segmentation",
+  "run_date": "2026-11-04",
+  "data_source": {
+    "name": "IBM Telco Customer Churn",
+    "url": "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv",
+    "synthetic_substitution": false,
+    "note": "Real IBM dataset downloaded from the IBM mirror; no synthetic substitution was used."
+  },
+  "method": {
+    "cleaning": "TotalCharges coerced to numeric; rows with blank TotalCharges dropped (see cleaning report).",
+    "survival": "Kaplan-Meier by Contract (lifelines); tenure as time, non-churned right-censored at tenure. Cox PH covariates listed in src/survival_analysis.py; concordance is in-sample.",
+    "segmentation": "KMeans (scikit-learn, StandardScaler, random_state=42, n_init=10); k chosen by silhouette over k=3..6.",
+    "revenue_at_risk": "Annualised = MonthlyCharges*12. Churned revenue is realised lost run-rate; active at-risk = non-churned in segments above overall churn rate.",
+    "scenario": "See src/scenario_model.py assumptions; save rates are ASSUMED scenarios, not observed outcomes."
+  },
+  "cleaning": {
+    "raw_n": 7043,
+    "dropped_blank_total_charges": 11,
+    "clean_n": 7032,
+    "n_churned": 1869,
+    "churn_rate": 0.26578498293515357
+  },
+  "n_customers": 7032,
+  "n_churned": 1869,
+  "churn_rate": 0.26578498293515357,
+  "survival": {
+    "km_by_contract": {
+      "Month-to-month": {
+        "n": 3875,
+        "n_churned": 1655,
+        "churn_rate": 0.4270967741935484,
+        "median_survival_months": 35.0,
+        "survival_at_12m": 0.7030966363488644,
+        "survival_at_24m": 0.5859154739046657
+      },
+      "One year": {
+        "n": 1472,
+        "n_churned": 166,
+        "churn_rate": 0.11277173913043478,
+        "median_survival_months": null,
+        "survival_at_12m": 0.9908082040748674,
+        "survival_at_24m": 0.9782723764279165
+      },
+      "Two year": {
+        "n": 1685,
+        "n_churned": 48,
+        "churn_rate": 0.028486646884272996,
+        "median_survival_months": null,
+        "survival_at_12m": 1.0,
+        "survival_at_24m": 1.0
+      }
+    },
+    "cox": {
+      "concordance": 0.8338444544797972,
+      "n": 7032,
+      "coefficients": {
+        "SeniorCitizen": {
+          "coef": -0.14176403922007422,
+          "hazard_ratio": 0.8678260052296612,
+          "p_value": 0.010232609753506452
+        },
+        "MonthlyCharges": {
+          "coef": -0.021810949627999367,
+          "hazard_ratio": 0.9784251892138283,
+          "p_value": 5.453023898661559e-33
+        },
+        "Contract_OneYear": {
+          "coef": -1.828975809126542,
+          "hazard_ratio": 0.16057794605026254,
+          "p_value": 4.512091897249799e-99
+        },
+        "Contract_TwoYear": {
+          "coef": -3.6296966140594615,
+          "hazard_ratio": 0.026524230266878942,
+          "p_value": 1.06221291179802e-111
+        },
+        "FiberOptic": {
+          "coef": 1.1038893718691971,
+          "hazard_ratio": 3.0158730945880374,
+          "p_value": 2.899293849200819e-28
+        },
+        "PaperlessBilling": {
+          "coef": 0.17481297559236886,
+          "hazard_ratio": 1.1910234453268365,
+          "p_value": 0.001986730607241398
+        },
+        "ElectronicCheck": {
+          "coef": 0.5004387523936259,
+          "hazard_ratio": 1.6494448098197232,
+          "p_value": 5.744327578644688e-24
+        },
+        "NoTechSupport": {
+          "coef": 0.48812021719125864,
+          "hazard_ratio": 1.6292507021432072,
+          "p_value": 3.1061460502501964e-15
+        }
+      }
+    },
+    "cox_available": true
+  },
+  "segmentation": {
+    "k": 6,
+    "silhouette_scores": {
+      "3": 0.2872418731549747,
+      "4": 0.3008774396545042,
+      "5": 0.30583913741425856,
+      "6": 0.3118581408227226
+    },
+    "silhouette_best": 0.3118581408227226,
+    "segments": [
+      {
+        "segment": 0,
+        "label": "short-tenure, mid-spend, mostly Month-to-month",
+        "n": 1238,
+        "n_churned": 429,
+        "churn_rate": 0.3465266558966074,
+        "mean_tenure": 18.407915993537966,
+        "mean_monthly_charges": 62.042043618739896,
+        "dominant_contract": "Month-to-month",
+        "share_month_to_month": 0.8747980613893377,
+        "mean_n_services": 1.462843295638126
+      },
+      {
+        "segment": 1,
+        "label": "long-tenure, higher-spend, mostly Two year",
+        "n": 1213,
+        "n_churned": 148,
+        "churn_rate": 0.12201154163231658,
+        "mean_tenure": 59.615828524319866,
+        "mean_monthly_charges": 91.5032563891179,
+        "dominant_contract": "Two year",
+        "share_month_to_month": 0.10387469084913438,
+        "mean_n_services": 4.254740313272877
+      },
+      {
+        "segment": 2,
+        "label": "short-tenure, higher-spend, mostly Month-to-month",
+        "n": 1814,
+        "n_churned": 961,
+        "churn_rate": 0.5297684674751929,
+        "mean_tenure": 18.959757442116867,
+        "mean_monthly_charges": 76.94261300992284,
+        "dominant_contract": "Month-to-month",
+        "share_month_to_month": 0.9338478500551268,
+        "mean_n_services": 1.8175303197353914
+      },
+      {
+        "segment": 3,
+        "label": "long-tenure, lower-spend, mostly Two year",
+        "n": 867,
+        "n_churned": 10,
+        "churn_rate": 0.011534025374855825,
+        "mean_tenure": 48.22722029988466,
+        "mean_monthly_charges": 23.37531718569781,
+        "dominant_contract": "Two year",
+        "share_month_to_month": 0.0,
+        "mean_n_services": 0.11764705882352941
+      },
+      {
+        "segment": 4,
+        "label": "short-tenure, lower-spend, mostly Month-to-month",
+        "n": 1116,
+        "n_churned": 256,
+        "churn_rate": 0.22939068100358423,
+        "mean_tenure": 12.624551971326165,
+        "mean_monthly_charges": 39.62629928315412,
+        "dominant_contract": "Month-to-month",
+        "share_month_to_month": 0.8055555555555556,
+        "mean_n_services": 0.696236559139785
+      },
+      {
+        "segment": 5,
+        "label": "long-tenure, higher-spend, mostly Two year",
+        "n": 784,
+        "n_churned": 65,
+        "churn_rate": 0.08290816326530612,
+        "mean_tenure": 54.326530612244895,
+        "mean_monthly_charges": 81.37276785714286,
+        "dominant_contract": "Two year",
+        "share_month_to_month": 0.09311224489795919,
+        "mean_n_services": 4.061224489795919
+      }
+    ]
+  },
+  "revenue_at_risk": {
+    "overall_churn_rate": 0.26578498293515357,
+    "total_churned_annualised_revenue": 1669570.2000000002,
+    "total_active_annualised_revenue": 3798361.8,
+    "at_risk_active_n": 1662,
+    "at_risk_active_annualised_revenue": 1324626.0,
+    "expected_loss_from_at_risk_actives": 598249.5977411374,
+    "highest_loss_segments": [
+      2,
+      0
+    ],
+    "segments": [
+      {
+        "segment": 0,
+        "n": 1238,
+        "n_churned": 429,
+        "churn_rate": 0.3465266558966074,
+        "churned_annualised_revenue": 356893.80000000005,
+        "active_n": 809,
+        "active_annualised_revenue": 564802.8,
+        "share_of_churned_revenue": 0.21376387767342758,
+        "is_at_risk_segment": true,
+        "expected_loss_from_actives": 195719.22552504038
+      },
+      {
+        "segment": 1,
+        "n": 1213,
+        "n_churned": 148,
+        "churn_rate": 0.12201154163231658,
+        "churned_annualised_revenue": 176717.39999999997,
+        "active_n": 1065,
+        "active_annualised_revenue": 1155204.0,
+        "share_of_churned_revenue": 0.10584604349071393,
+        "is_at_risk_segment": false,
+        "expected_loss_from_actives": 0.0
+      },
+      {
+        "segment": 2,
+        "n": 1814,
+        "n_churned": 961,
+        "churn_rate": 0.5297684674751929,
+        "churned_annualised_revenue": 915063.6000000001,
+        "active_n": 853,
+        "active_annualised_revenue": 759823.2,
+        "share_of_churned_revenue": 0.5480833330638029,
+        "is_at_risk_segment": true,
+        "expected_loss_from_actives": 402530.37221609696
+      },
+      {
+        "segment": 3,
+        "n": 867,
+        "n_churned": 10,
+        "churn_rate": 0.011534025374855825,
+        "churned_annualised_revenue": 3381.6000000000004,
+        "active_n": 857,
+        "active_annualised_revenue": 239815.2,
+        "share_of_churned_revenue": 0.0020254314553530004,
+        "is_at_risk_segment": false,
+        "expected_loss_from_actives": 0.0
+      },
+      {
+        "segment": 4,
+        "n": 1116,
+        "n_churned": 256,
+        "churn_rate": 0.22939068100358423,
+        "churned_annualised_revenue": 145936.2,
+        "active_n": 860,
+        "active_annualised_revenue": 384739.2,
+        "share_of_churned_revenue": 0.08740944226244575,
+        "is_at_risk_segment": false,
+        "expected_loss_from_actives": 0.0
+      },
+      {
+        "segment": 5,
+        "n": 784,
+        "n_churned": 65,
+        "churn_rate": 0.08290816326530612,
+        "churned_annualised_revenue": 71577.6,
+        "active_n": 719,
+        "active_annualised_revenue": 693977.4,
+        "share_of_churned_revenue": 0.042871872054256834,
+        "is_at_risk_segment": false,
+        "expected_loss_from_actives": 0.0
+      }
+    ]
+  },
+  "scenario": {
+    "highest_loss_segments": [
+      2,
+      0
+    ],
+    "assumptions": {
+      "discount_fraction": 0.1,
+      "discount_duration_months": 12,
+      "discount_cost_applies_to": "every customer offered, for 12 months",
+      "assumed_save_rates": [
+        0.1,
+        0.15,
+        0.2
+      ],
+      "save_rate_definition": "share of would-be churners retained by the offer",
+      "formula": "Net = N*r*s*A - N*d*A; break-even s* = d / r"
+    },
+    "blanket_all_actives_in_top_segments": {
+      "n_active_offered": 1662,
+      "cohort_churn_rate": 0.45543905635648757,
+      "mean_annual_revenue": 797.0072202166065,
+      "discount_fraction": 0.1,
+      "break_even_save_rate": 0.219568345323741,
+      "scenarios": {
+        "10%": {
+          "assumed_save_rate": 0.1,
+          "saved_customers": 75.69397116644824,
+          "benefit": 60328.64154652687,
+          "cost": 132462.6,
+          "net": -72133.95845347314
+        },
+        "15%": {
+          "assumed_save_rate": 0.15,
+          "saved_customers": 113.54095674967236,
+          "benefit": 90492.96231979031,
+          "cost": 132462.6,
+          "net": -41969.63768020969
+        },
+        "20%": {
+          "assumed_save_rate": 0.2,
+          "saved_customers": 151.38794233289647,
+          "benefit": 120657.28309305375,
+          "cost": 132462.6,
+          "net": -11805.31690694626
+        }
+      }
+    },
+    "targeted_month_to_month_in_top_segments": {
+      "n_active_offered": 1426,
+      "cohort_churn_rate": 0.48649621894130357,
+      "mean_annual_revenue": 815.7551192145863,
+      "discount_fraction": 0.1,
+      "break_even_save_rate": 0.2055514433752776,
+      "scenarios": {
+        "10%": {
+          "assumed_save_rate": 0.1,
+          "saved_customers": 69.3743608210299,
+          "benefit": 56592.48998199497,
+          "cost": 116326.68000000001,
+          "net": -59734.190018005036
+        },
+        "15%": {
+          "assumed_save_rate": 0.15,
+          "saved_customers": 104.06154123154484,
+          "benefit": 84888.73497299245,
+          "cost": 116326.68000000001,
+          "net": -31437.94502700756
+        },
+        "20%": {
+          "assumed_save_rate": 0.2,
+          "saved_customers": 138.7487216420598,
+          "benefit": 113184.97996398994,
+          "cost": 116326.68000000001,
+          "net": -3141.7000360100647
+        }
+      }
+    }
+  }
+}
