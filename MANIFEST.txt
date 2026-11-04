@@ -1,0 +1,27 @@
+Files to upload to GitHub for churn-strategy-case
+(verified locally 2026-11-04; no push made from this build):
+
+README.md
+DATA_SOURCES.md
+requirements.txt
+MANIFEST.txt
+src/download_data.py
+src/generate_synthetic.py
+src/clean_data.py
+src/survival_analysis.py
+src/segmentation.py
+src/revenue_at_risk.py
+src/scenario_model.py
+src/run_all.py
+data/Telco-Customer-Churn.csv
+data/cleaned.csv
+outputs/metrics.json
+outputs/charts/km_by_contract.png
+outputs/charts/churn_by_segment.png
+outputs/charts/revenue_at_risk.png
+docs/executive_memo.md
+
+EXCLUDE (do not upload):
+__pycache__/ (all)
+*.pyc
+Any file >20 MB (none in this project; largest is data/cleaned.csv at ~1.1 MB)

@@ -1,0 +1,7 @@
+# Only libraries actually imported by src/ in this project.
+pandas
+numpy
+matplotlib
+scikit-learn
+lifelines
+requests
